@@ -521,49 +521,82 @@ function saveEdit(){
 function delTxn(id){ state.txns=state.txns.filter(t=>t.id!==id); persist(); updateAll(); }
 
 function renderPassbook(){
-  const fCat=document.getElementById('flt-cat').value;
-  const fType=document.getElementById('flt-type').value;
-  const pb=document.getElementById('passbook');
-  const isGPay=activeWallet==='GPay';
-  let walletTxns=isGPay
-    ?state.txns.filter(t=>t.wallet==='SBI'||t.wallet==='Canara')
-    :state.txns.filter(t=>t.wallet===activeWallet);
-  const overallRunBals={},specificRunBals={};
-  let tO=(parseFloat(state.ob['Cash'])||0)+(parseFloat(state.ob['SBI'])||0)+(parseFloat(state.ob['Canara'])||0);
-  state.txns.forEach(t=>{ tO+=t.type==='cr'?parseFloat(t.amt):-parseFloat(t.amt); overallRunBals[t.id]=tO; });
-  let tS=isGPay?(parseFloat(state.ob['SBI'])||0)+(parseFloat(state.ob['Canara'])||0):(parseFloat(state.ob[activeWallet])||0);
-  walletTxns.forEach(t=>{ tS+=t.type==='cr'?parseFloat(t.amt):-parseFloat(t.amt); specificRunBals[t.id]=tS; });
-  let filtered=walletTxns.slice();
-  if(fCat) filtered=filtered.filter(t=>t.cat===fCat);
-  if(fType) filtered=filtered.filter(t=>t.type===fType);
-  document.getElementById('txn-count').textContent=filtered.length+' entr'+(filtered.length===1?'y':'ies');
-  if(!filtered.length){ pb.innerHTML='<div class="empty"><i class="ti ti-receipt-off" style="font-size:28px;display:block;margin-bottom:8px"></i>No transactions yet</div>'; return; }
-  const byDate={};
-  filtered.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).forEach(t=>{ if(!byDate[t.date]) byDate[t.date]=[]; byDate[t.date].push(t); });
-  const dates=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
-  pb.innerHTML=dates.map(d=>{
-    const label=new Date(d+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
-    const rows=byDate[d].map(t=>{
-      const wTag=isGPay?` · ${t.wallet}`:'';
-      return `<div class="pb-row">
-        <div class="pb-icon ${t.type}"><i class="ti ${catIcons[t.cat]||'ti-dots'}"></i></div>
-        <div class="pb-mid">
-          <div class="pb-desc">${t.desc}</div>
-          <div class="pb-meta">${t.cat}${wTag}${t.note?' · '+t.note:''}</div>
-        </div>
-        <div class="pb-right">
-          <div class="pb-amt ${t.type}">${t.type==='cr'?'+':'-'}${fmt(t.amt)}</div>
-          <div class="pb-bal-line">${isGPay?'GPay':'Acc'}: ${fmt(specificRunBals[t.id])}</div>
-          <div class="pb-bal-line">Total: ${fmt(overallRunBals[t.id])}</div>
-        </div>
-        <div class="pb-actions">
-          <i class="ti ti-edit pb-btn" onclick="openEditModal(${t.id})" title="Edit"></i>
-          <i class="ti ti-trash pb-btn del" onclick="delTxn(${t.id})" title="Delete"></i>
-        </div>
-      </div>`;
+  try {
+    const fCat=document.getElementById('flt-cat').value;
+    const fType=document.getElementById('flt-type').value;
+    const pb=document.getElementById('passbook');
+    const isGPay=activeWallet==='GPay';
+
+    // All txns sorted by date+id for running balance calculation
+    const sorted=state.txns.slice().sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
+
+    // Overall running balance across all wallets
+    const overallRunBals={};
+    let tO=(parseFloat(state.ob['Cash'])||0)+(parseFloat(state.ob['SBI'])||0)+(parseFloat(state.ob['Canara'])||0);
+    sorted.forEach(t=>{ tO+=t.type==='cr'?parseFloat(t.amt):-parseFloat(t.amt); overallRunBals[t.id]=tO; });
+
+    // Wallet-specific txns for running balance
+    const specificRunBals={};
+    let walletSorted;
+    if(isGPay){
+      walletSorted=sorted.filter(t=>t.wallet==='SBI'||t.wallet==='Canara');
+      let tS=(parseFloat(state.ob['SBI'])||0)+(parseFloat(state.ob['Canara'])||0);
+      walletSorted.forEach(t=>{ tS+=t.type==='cr'?parseFloat(t.amt):-parseFloat(t.amt); specificRunBals[t.id]=tS; });
+    } else {
+      walletSorted=sorted.filter(t=>t.wallet===activeWallet);
+      let tS=parseFloat(state.ob[activeWallet])||0;
+      walletSorted.forEach(t=>{ tS+=t.type==='cr'?parseFloat(t.amt):-parseFloat(t.amt); specificRunBals[t.id]=tS; });
+    }
+
+    // Apply filters for display only
+    let filtered=walletSorted.slice();
+    if(fCat) filtered=filtered.filter(t=>t.cat===fCat);
+    if(fType) filtered=filtered.filter(t=>t.type===fType);
+
+    document.getElementById('txn-count').textContent=filtered.length+' entr'+(filtered.length===1?'y':'ies');
+
+    if(!filtered.length){
+      pb.innerHTML='<div class="empty"><i class="ti ti-receipt-off" style="font-size:28px;display:block;margin-bottom:8px"></i>No transactions yet</div>';
+      return;
+    }
+
+    // Group by date, newest first
+    const byDate={};
+    filtered.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).forEach(t=>{
+      if(!byDate[t.date]) byDate[t.date]=[];
+      byDate[t.date].push(t);
+    });
+
+    const dates=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+    pb.innerHTML=dates.map(d=>{
+      const label=new Date(d+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+      const rows=byDate[d].map(t=>{
+        const wTag=isGPay?' · '+t.wallet:'';
+        const accBal=specificRunBals[t.id]!==undefined?fmt(specificRunBals[t.id]):'—';
+        const totBal=overallRunBals[t.id]!==undefined?fmt(overallRunBals[t.id]):'—';
+        return '<div class="pb-row">'
+          +'<div class="pb-icon '+t.type+'"><i class="ti '+(catIcons[t.cat]||'ti-dots')+'"></i></div>'
+          +'<div class="pb-mid">'
+            +'<div class="pb-desc">'+t.desc+'</div>'
+            +'<div class="pb-meta">'+t.cat+wTag+(t.note?' · '+t.note:'')+'</div>'
+          +'</div>'
+          +'<div class="pb-right">'
+            +'<div class="pb-amt '+t.type+'">'+(t.type==='cr'?'+':'-')+fmt(t.amt)+'</div>'
+            +'<div class="pb-bal-line">'+(isGPay?'GPay':'Acc')+': '+accBal+'</div>'
+            +'<div class="pb-bal-line">Total: '+totBal+'</div>'
+          +'</div>'
+          +'<div class="pb-actions">'
+            +'<i class="ti ti-edit pb-btn" onclick="openEditModal('+t.id+')" title="Edit"></i>'
+            +'<i class="ti ti-trash pb-btn del" onclick="delTxn('+t.id+')" title="Delete"></i>'
+          +'</div>'
+        +'</div>';
+      }).join('');
+      return '<div class="pb-date-sep">'+label+'</div>'+rows;
     }).join('');
-    return `<div class="pb-date-sep">${label}</div>${rows}`;
-  }).join('');
+  } catch(e) {
+    document.getElementById('passbook').innerHTML='<div class="empty">Error loading transactions. Please refresh.</div>';
+    console.error('renderPassbook error:',e);
+  }
 }
 </script>
 </body>
