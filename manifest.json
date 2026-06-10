@@ -1,6 +1,6 @@
 {
-  "name": "My Passbook",
-  "short_name": "Passbook",
+  "name": "Expense Tracker",
+  "short_name": "Expenses",
   "description": "Personal expense tracker with Cash, GPay, SBI & Canara",
   "start_url": "/",
   "display": "standalone",
