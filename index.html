@@ -395,6 +395,7 @@ function walBal(w) {
 function updateAll() {
   var cb = walBal('Cash'), sb = walBal('SBI'), ca = walBal('Canara');
   var gp = sb + ca, tot = cb + gp;
+  document.getElementById('balAll').textContent = fmt(tot);
   document.getElementById('balCash').textContent = fmt(cb);
   document.getElementById('balSBI').textContent = fmt(sb);
   document.getElementById('balCanara').textContent = fmt(ca);
