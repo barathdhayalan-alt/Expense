@@ -402,8 +402,10 @@ function updateAll() {
   document.getElementById('balGPay').textContent = fmt(gp);
   document.getElementById('totalBal').textContent = fmt(tot);
   document.getElementById('activeLbl').textContent = activeWallet === 'GPay' ? 'GPay (all banks)' : activeWallet;
-  document.getElementById('pbTitle').textContent = activeWallet + ' Passbook';
-  var wcards = document.querySelectorAll('.wcard');
+  document.getElementById('pbTitle').textContent =
+  activeWallet === 'All'
+    ? 'Complete Passbook'
+    : activeWallet + ' Passbook';  var wcards = document.querySelectorAll('.wcard');
   for (var i = 0; i < wcards.length; i++) {
     var w = wcards[i].getAttribute('data-w');
     var isActive = w === activeWallet || (activeWallet === 'SBI' && w === 'GPay') || (activeWallet === 'Canara' && w === 'GPay') || (activeWallet === 'GPay' && w === 'GPay');
@@ -518,6 +520,7 @@ function renderPB() {
   var fType = document.getElementById('fltType').value;
   var pb = document.getElementById('pb');
   var isGPay = activeWallet === 'GPay';
+  var isAll = activeWallet === 'All';
 
   // Get wallet txns in chronological order for running balance
   var allSorted = state.txns.slice().sort(function(a,b){ return a.date < b.date ? -1 : a.date > b.date ? 1 : a.id - b.id; });
@@ -536,11 +539,15 @@ function renderPB() {
   var walletTxns = [];
   for (var j = 0; j < allSorted.length; j++) {
     var tx = allSorted[j];
-    if (isGPay) {
-      if (tx.wallet === 'SBI' || tx.wallet === 'Canara') walletTxns.push(tx);
-    } else {
-      if (tx.wallet === activeWallet) walletTxns.push(tx);
-    }
+    if (isAll) {
+  walletTxns.push(tx);
+} else if (isGPay) {
+  if (tx.wallet === 'SBI' || tx.wallet === 'Canara')
+    walletTxns.push(tx);
+} else {
+  if (tx.wallet === activeWallet)
+    walletTxns.push(tx);
+}
   }
   var runS = isGPay ? ((parseFloat(state.ob['SBI'])||0) + (parseFloat(state.ob['Canara'])||0)) : (parseFloat(state.ob[activeWallet])||0);
   for (var k = 0; k < walletTxns.length; k++) {
