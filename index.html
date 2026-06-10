@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="theme-color" content="#0C447C"/>
+<title>My Passbook</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F0F4F8;min-height:100vh;padding-bottom:2rem}
+.wrap{max-width:480px;margin:0 auto;padding:1rem}
+.hero{border-radius:20px;background:linear-gradient(135deg,#0C447C 60%,#185FA5);padding:1.5rem;margin-bottom:1rem;box-shadow:0 4px 24px rgba(12,68,124,0.18)}
+.hero-label{font-size:11px;font-weight:600;letter-spacing:0.1em;color:#85B7EB;margin-bottom:4px;text-transform:uppercase}
+.hero-amount{font-size:36px;font-weight:600;color:#fff;letter-spacing:-1.5px;margin-bottom:2px}
+.hero-sub{font-size:12px;color:#B5D4F4}
+.hero-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:14px}
+.hero-wallet{font-size:12px;color:#85B7EB}
+.hero-wallet span{color:#fff;font-weight:600}
+.hero-date{font-size:11px;color:#85B7EB}
+.wallet-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:1rem}
+.wcard{border-radius:16px;border:2px solid transparent;padding:14px 12px;cursor:pointer;transition:all 0.15s;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.wcard[data-w="Cash"]{background:#EAF3DE}
+.wcard[data-w="GPay"]{background:#E6F1FB;grid-column:1/-1}
+.wcard.active[data-w="Cash"]{border-color:#3B6D11;box-shadow:0 2px 12px rgba(59,109,17,0.15)}
+.wcard.active[data-w="GPay"]{border-color:#185FA5;box-shadow:0 2px 12px rgba(24,95,165,0.15)}
+.wcard .wicon{font-size:20px;margin-bottom:8px}
+.wcard[data-w="Cash"] .wicon{color:#3B6D11}
+.wcard[data-w="GPay"] .wicon{color:#185FA5}
+.wcard .wname{font-size:11px;font-weight:600;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.05em}
+.wcard[data-w="Cash"] .wname{color:#27500A}
+.wcard[data-w="GPay"] .wname{color:#0C447C}
+.wcard .wbal{font-size:17px;font-weight:600}
+.wcard[data-w="Cash"] .wbal{color:#27500A}
+.wcard[data-w="GPay"] .wbal{color:#0C447C}
+.gpay-inner{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:12px;padding-top:12px;border-top:1.5px solid #B5D4F4}
+.sub-card{border-radius:12px;padding:10px;cursor:pointer;border:1.5px solid transparent;transition:all 0.15s}
+.sub-card[data-w="SBI"]{background:#FAEEDA}
+.sub-card[data-w="Canara"]{background:#FBEAF0}
+.sub-card.active[data-w="SBI"]{border-color:#854F0B}
+.sub-card.active[data-w="Canara"]{border-color:#993556}
+.sub-card .sicon{font-size:15px;margin-bottom:5px}
+.sub-card[data-w="SBI"] .sicon{color:#854F0B}
+.sub-card[data-w="Canara"] .sicon{color:#993556}
+.sub-card .sname{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:3px}
+.sub-card[data-w="SBI"] .sname{color:#633806}
+.sub-card[data-w="Canara"] .sname{color:#72243E}
+.sub-card .sbal{font-size:14px;font-weight:600}
+.sub-card[data-w="SBI"] .sbal{color:#633806}
+.sub-card[data-w="Canara"] .sbal{color:#72243E}
+.gpay-combined-lbl{font-size:10px;color:#378ADD;margin-top:3px;font-weight:500}
+.card{background:#fff;border-radius:16px;padding:1rem;margin-bottom:1rem;box-shadow:0 1px 4px rgba(0,0,0,0.07)}
+.card-title{font-size:12px;font-weight:600;color:#64748B;letter-spacing:0.05em;text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.card-title-left{display:flex;align-items:center;gap:6px}
+.pill{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:3px 9px;border-radius:99px;background:#E6F1FB;color:#0C447C}
+.edit-link{font-size:12px;color:#378ADD;cursor:pointer;font-weight:500}
+.ob-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.ob-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.ob-lbl{font-size:13px;color:#64748B;width:64px;flex-shrink:0}
+.ob-row input{flex:1;font-size:14px;padding:8px 10px;border-radius:10px;border:1.5px solid #E2E8F0;background:#F8FAFC;color:#1E293B}
+.ob-row input:focus{outline:none;border-color:#378ADD;background:#fff}
+.save-btn{margin-top:10px;width:100%;padding:10px;font-size:13px;border-radius:10px;background:#F1F5F9;border:1.5px solid #E2E8F0;color:#334155;cursor:pointer;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px}
+.save-btn:hover{background:#E2E8F0}
+.ob-summary{display:flex;flex-direction:column;gap:6px}
+.ob-sum-row{display:flex;justify-content:space-between;font-size:13px;padding:2px 0}
+.ob-sum-row .lbl{color:#64748B}
+.ob-sum-row .val{font-weight:600;color:#1E293B}
+.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:11px;color:#64748B;font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
+.field input,.field select{font-size:14px;padding:8px 10px;border-radius:10px;border:1.5px solid #E2E8F0;background:#F8FAFC;color:#1E293B;width:100%}
+.field input:focus,.field select:focus{outline:none;border-color:#378ADD;background:#fff}
+.field.full{grid-column:1/-1}
+.add-btn{width:100%;margin-top:12px;padding:11px;font-size:14px;font-weight:600;border-radius:12px;background:linear-gradient(135deg,#0C447C,#185FA5);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 2px 8px rgba(12,68,124,0.25)}
+.add-btn:hover{background:linear-gradient(135deg,#185FA5,#2176C7)}
+.filter-row{display:flex;gap:8px;margin-bottom:12px}
+.filter-row select{font-size:12px;padding:6px 8px;border-radius:8px;border:1.5px solid #E2E8F0;background:#F8FAFC;color:#334155;flex:1}
+.pb-date-sep{font-size:10px;font-weight:700;color:#94A3B8;letter-spacing:0.08em;text-transform:uppercase;padding:10px 0 6px;border-bottom:1.5px solid #F1F5F9;margin-bottom:2px}
+.pb-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #F1F5F9}
+.pb-row:last-child{border-bottom:none}
+.pb-icon{width:36px;height:36px;border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px}
+.pb-icon.cr{background:#EAF3DE;color:#3B6D11}
+.pb-icon.db{background:#FCEBEB;color:#A32D2D}
+.pb-mid{flex:1;min-width:0}
+.pb-desc{font-size:13px;font-weight:600;color:#1E293B;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pb-meta{font-size:11px;color:#94A3B8;margin-top:2px}
+.pb-right{text-align:right;flex-shrink:0}
+.pb-amt{font-size:14px;font-weight:700}
+.pb-amt.cr{color:#3B6D11}
+.pb-amt.db{color:#C0392B}
+.pb-bal-line{font-size:10px;color:#94A3B8;margin-top:2px;line-height:1.5}
+.pb-actions{display:flex;flex-direction:column;gap:4px;flex-shrink:0}
+.pb-btn{color:#CBD5E1;cursor:pointer;font-size:16px;padding:3px;border-radius:6px;transition:color 0.1s}
+.pb-btn:hover{color:#0C447C}
+.pb-btn.del:hover{color:#C0392B}
+.empty{text-align:center;padding:2.5rem 0;color:#94A3B8;font-size:13px}
+.sync-bar{display:flex;align-items:center;gap:6px;font-size:11px;color:#64748B;margin-bottom:12px;padding:8px 12px;background:#fff;border-radius:10px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#22C55E;flex-shrink:0}
+.sync-dot.syncing{background:#F59E0B;animation:pulse 1s infinite}
+.sync-dot.error{background:#EF4444}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+/* PIN screen */
+.pin-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F0F4F8}
+.pin-box{background:#fff;border-radius:24px;padding:2rem 1.5rem;width:100%;max-width:340px;box-shadow:0 4px 24px rgba(0,0,0,0.1);text-align:center}
+.pin-logo{font-size:40px;margin-bottom:1rem}
+.pin-box h2{font-size:20px;font-weight:700;color:#1E293B;margin-bottom:6px}
+.pin-box p{font-size:13px;color:#64748B;margin-bottom:1.5rem;line-height:1.5}
+.pin-input{font-size:24px;letter-spacing:0.4em;padding:12px 16px;border-radius:12px;border:2px solid #E2E8F0;background:#F8FAFC;color:#1E293B;width:160px;text-align:center;margin-bottom:10px}
+.pin-input:focus{outline:none;border-color:#378ADD}
+.pin-btn{width:100%;padding:12px;font-size:14px;font-weight:600;border-radius:12px;background:linear-gradient(135deg,#0C447C,#185FA5);border:none;color:#fff;cursor:pointer;margin-top:4px}
+.pin-btn:hover{opacity:0.9}
+.pin-note{font-size:11px;color:#94A3B8;margin-top:12px}
+.pin-err{font-size:12px;color:#C0392B;margin-top:8px;min-height:18px}
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(15,23,42,0.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(2px)}
+.modal-box{background:#fff;border-radius:20px;padding:1.25rem;width:100%;max-width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.2)}
+.modal-title{font-size:15px;font-weight:700;color:#1E293B;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.modal-actions{display:flex;gap:8px;margin-top:14px}
+.modal-btn{flex:1;padding:10px;font-size:13px;font-weight:600;border-radius:10px;cursor:pointer;border:1.5px solid #E2E8F0;background:#F8FAFC;color:#334155}
+.modal-btn.primary{background:linear-gradient(135deg,#0C447C,#185FA5);border:none;color:#fff}
+.modal-btn:hover{background:#E2E8F0}
+.modal-btn.primary:hover{opacity:0.9}
+</style>
+</head>
+<body>
+
+<!-- PIN Screen -->
+<div class="pin-screen" id="pin-screen">
+  <div class="pin-box">
+    <div class="pin-logo">💰</div>
+    <h2>My Passbook</h2>
+    <p>Enter your 4-digit PIN to access.<br/>First time? Choose any PIN — same PIN on any device gives you the same data.</p>
+    <input class="pin-input" type="password" id="pin-inp" maxlength="4" placeholder="····" inputmode="numeric" autofocus/>
+    <button class="pin-btn" onclick="pinLogin()">Open Passbook</button>
+    <div class="pin-err" id="pin-err"></div>
+    <div class="pin-note">🔄 Syncs across all your devices</div>
+  </div>
+</div>
+
+<!-- Main App -->
+<div id="main-app" style="display:none">
+<div class="wrap">
+
+<div class="sync-bar">
+  <div class="sync-dot" id="sync-dot"></div>
+  <span id="sync-label">Loading…</span>
+  <span style="margin-left:auto;cursor:pointer;color:#378ADD;font-weight:500;display:flex;align-items:center;gap:4px" onclick="syncNow()"><i class="ti ti-refresh"></i> Sync</span>
+</div>
+
+<div class="hero">
+  <div class="hero-label">Total Balance</div>
+  <div class="hero-amount" id="total-bal">₹0.00</div>
+  <div class="hero-sub">across all wallets</div>
+  <div class="hero-row">
+    <div class="hero-wallet">Viewing <span id="active-lbl">Cash</span></div>
+    <div class="hero-date" id="hero-date"></div>
+  </div>
+</div>
+
+<div class="wallet-grid">
+  <div class="wcard active" data-w="Cash" onclick="switchWallet('Cash')">
+    <div class="wicon"><i class="ti ti-wallet"></i></div>
+    <div class="wname">Cash</div>
+    <div class="wbal" id="bal-Cash">₹0.00</div>
+  </div>
+  <div class="wcard" data-w="GPay" onclick="switchWallet('GPay')">
+    <div>
+      <div class="wicon"><i class="ti ti-device-mobile"></i></div>
+      <div class="wname">GPay</div>
+      <div class="wbal" id="bal-GPay">₹0.00</div>
+      <div class="gpay-combined-lbl">SBI + Canara combined</div>
+    </div>
+    <div class="gpay-inner" onclick="event.stopPropagation()">
+      <div class="sub-card" data-w="SBI" onclick="switchWallet('SBI')">
+        <div class="sicon"><i class="ti ti-building-bank"></i></div>
+        <div class="sname">SBI</div>
+        <div class="sbal" id="bal-SBI">₹0.00</div>
+      </div>
+      <div class="sub-card" data-w="Canara" onclick="switchWallet('Canara')">
+        <div class="sicon"><i class="ti ti-building-bank"></i></div>
+        <div class="sname">Canara</div>
+        <div class="sbal" id="bal-Canara">₹0.00</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title">
+    <div class="card-title-left"><i class="ti ti-adjustments-horizontal"></i> Opening Balances</div>
+    <span class="edit-link" id="ob-edit-btn" onclick="toggleOB()" style="display:none">Edit</span>
+  </div>
+  <div id="ob-form">
+    <div class="ob-row"><div class="ob-dot" style="background:#639922"></div><span class="ob-lbl">Cash</span><input type="number" id="ob-Cash" placeholder="0.00" step="0.01"/></div>
+    <div class="ob-row"><div class="ob-dot" style="background:#EF9F27"></div><span class="ob-lbl">SBI</span><input type="number" id="ob-SBI" placeholder="0.00" step="0.01"/></div>
+    <div class="ob-row"><div class="ob-dot" style="background:#D4537E"></div><span class="ob-lbl">Canara</span><input type="number" id="ob-Canara" placeholder="0.00" step="0.01"/></div>
+    <button class="save-btn" onclick="saveOB()"><i class="ti ti-check"></i> Save & Continue</button>
+  </div>
+  <div id="ob-summary" style="display:none">
+    <div class="ob-summary">
+      <div class="ob-sum-row"><span class="lbl">Cash</span><span class="val" id="obs-Cash">₹0.00</span></div>
+      <div class="ob-sum-row"><span class="lbl">SBI</span><span class="val" id="obs-SBI">₹0.00</span></div>
+      <div class="ob-sum-row"><span class="lbl">Canara</span><span class="val" id="obs-Canara">₹0.00</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title"><div class="card-title-left"><i class="ti ti-plus"></i> New Transaction</div></div>
+  <div class="form-grid">
+    <div class="field full"><label>Description</label><input type="text" id="inp-desc" placeholder="e.g. Mess food, bus fare…"/></div>
+    <div class="field"><label>Amount (₹)</label><input type="number" id="inp-amt" placeholder="0.00" step="0.01" min="0"/></div>
+    <div class="field"><label>Date</label><input type="date" id="inp-date"/></div>
+    <div class="field"><label>Type</label>
+      <select id="inp-type"><option value="db">Debit (spent)</option><option value="cr">Credit (received)</option></select>
+    </div>
+    <div class="field"><label>Wallet</label>
+      <select id="inp-wallet"><option>Cash</option><option>SBI</option><option>Canara</option></select>
+    </div>
+    <div class="field"><label>Category</label>
+      <select id="inp-cat">
+        <option>Food</option><option>Travel</option><option>Stationery</option>
+        <option>Laundry</option><option>Snacks</option><option>Recharge</option>
+        <option>Medicine</option><option>Other</option>
+      </select>
+    </div>
+    <div class="field full"><label>Note (optional)</label><input type="text" id="inp-note" placeholder="Any extra detail"/></div>
+  </div>
+  <button class="add-btn" onclick="addTxn()"><i class="ti ti-plus"></i> Add to Passbook</button>
+</div>
+
+<div class="card">
+  <div class="card-title">
+    <div class="card-title-left"><i class="ti ti-book"></i> <span id="passbook-title">Cash Passbook</span></div>
+    <span class="pill" id="txn-count">0 entries</span>
+  </div>
+  <div class="filter-row">
+    <select id="flt-cat" onchange="renderPassbook()">
+      <option value="">All Categories</option>
+      <option>Food</option><option>Travel</option><option>Stationery</option>
+      <option>Laundry</option><option>Snacks</option><option>Recharge</option>
+      <option>Medicine</option><option>Other</option>
+    </select>
+    <select id="flt-type" onchange="renderPassbook()">
+      <option value="">All Types</option>
+      <option value="cr">Credit only</option>
+      <option value="db">Debit only</option>
+    </select>
+  </div>
+  <div id="passbook"></div>
+</div>
+
+</div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="edit-modal" style="display:none" onclick="closeModal()">
+  <div class="modal-box" onclick="event.stopPropagation()">
+    <div class="modal-title"><i class="ti ti-edit"></i> Edit Transaction</div>
+    <div class="form-grid">
+      <div class="field full"><label>Description</label><input type="text" id="edit-desc"/></div>
+      <div class="field"><label>Amount (₹)</label><input type="number" id="edit-amt" step="0.01" min="0"/></div>
+      <div class="field"><label>Date</label><input type="date" id="edit-date"/></div>
+      <div class="field"><label>Type</label>
+        <select id="edit-type"><option value="db">Debit</option><option value="cr">Credit</option></select>
+      </div>
+      <div class="field"><label>Wallet</label>
+        <select id="edit-wallet"><option>Cash</option><option>SBI</option><option>Canara</option></select>
+      </div>
+      <div class="field"><label>Category</label>
+        <select id="edit-cat">
+          <option>Food</option><option>Travel</option><option>Stationery</option>
+          <option>Laundry</option><option>Snacks</option><option>Recharge</option>
+          <option>Medicine</option><option>Other</option>
+        </select>
+      </div>
+      <div class="field full"><label>Note</label><input type="text" id="edit-note" placeholder="Optional"/></div>
+    </div>
+    <div class="modal-actions">
+      <button class="modal-btn" onclick="closeModal()">Cancel</button>
+      <button class="modal-btn primary" onclick="saveEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const WALLETS = ['Cash','SBI','Canara'];
+const API_KEY = '$2a$10$FA8EZKPu.ZcFu0inAlTUieEQ8r7E4L4Xfv9sy0aMu2IT0LQvPn9c6';
+const JSONBIN_BASE = 'https://api.jsonbin.io/v3';
+let activeWallet = 'Cash';
+let state = {ob:{Cash:0,SBI:0,Canara:0},txns:[],obSet:false};
+let editingId = null;
+let binId = null;
+let userPin = null;
+const catIcons = {Food:'ti-bowl-chopsticks',Travel:'ti-bus',Stationery:'ti-pencil',Laundry:'ti-wash',Snacks:'ti-cookie',Recharge:'ti-bolt',Medicine:'ti-pill',Other:'ti-dots'};
+
+document.getElementById('hero-date').textContent = new Date().toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+document.getElementById('inp-date').value = new Date().toISOString().split('T')[0];
+document.getElementById('pin-inp').addEventListener('keydown', e => { if(e.key==='Enter') pinLogin(); });
+
+function setSyncStatus(s, msg){
+  const dot=document.getElementById('sync-dot'), lbl=document.getElementById('sync-label');
+  if(s==='synced'){dot.className='sync-dot';lbl.textContent=msg||'Synced';}
+  else if(s==='syncing'){dot.className='sync-dot syncing';lbl.textContent=msg||'Syncing…';}
+  else{dot.className='sync-dot error';lbl.textContent=msg||'Sync error';}
+}
+
+function fmt(n){ return '₹'+(parseFloat(n)||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+// Store binId mapping locally so we don't create duplicate bins
+function getBinIdKey(pin){ return 'pb_bin_'+pin; }
+
+async function pinLogin(){
+  const pin = document.getElementById('pin-inp').value.trim();
+  if(pin.length < 4){ document.getElementById('pin-err').textContent='Please enter a 4-digit PIN'; return; }
+  userPin = pin;
+  document.getElementById('pin-err').textContent='';
+  document.getElementById('pin-screen').style.display='none';
+  document.getElementById('main-app').style.display='block';
+  setSyncStatus('syncing','Connecting…');
+
+  // Check if bin exists for this PIN in localStorage
+  binId = localStorage.getItem(getBinIdKey(pin));
+  if(binId){
+    await loadFromCloud();
+  } else {
+    // Search for existing bin with this PIN name
+    await findOrCreateBin();
+  }
+}
+
+async function findOrCreateBin(){
+  setSyncStatus('syncing','Setting up your data…');
+  try {
+    // Try to find existing bins
+    const res = await fetch(`${JSONBIN_BASE}/b`, {
+      headers: { 'X-Master-Key': API_KEY }
+    });
+    if(res.ok){
+      const data = await res.json();
+      // Look for bin named with our PIN
+      const existing = data.result && data.result.find(b => b.snippetMeta && b.snippetMeta.name === 'pb_'+userPin);
+      if(existing){
+        binId = existing._id;
+        localStorage.setItem(getBinIdKey(userPin), binId);
+        await loadFromCloud();
+        return;
+      }
+    }
+  } catch(e){}
+  // Create new bin
+  await createBin();
+}
+
+async function createBin(){
+  try {
+    const res = await fetch(`${JSONBIN_BASE}/b`, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'X-Master-Key': API_KEY,
+        'X-Bin-Name': 'pb_'+userPin,
+        'X-Bin-Private': 'false'
+      },
+      body: JSON.stringify(state)
+    });
+    const data = await res.json();
+    binId = data.metadata.id;
+    localStorage.setItem(getBinIdKey(userPin), binId);
+    setSyncStatus('synced','Ready');
+    updateAll();
+  } catch(e){
+    setSyncStatus('error','Could not connect');
+    updateAll();
+  }
+}
+
+async function loadFromCloud(){
+  setSyncStatus('syncing','Loading…');
+  try {
+    const res = await fetch(`${JSONBIN_BASE}/b/${binId}/latest`, {
+      headers:{ 'X-Master-Key': API_KEY }
+    });
+    const data = await res.json();
+    if(data.record) state = data.record;
+    setSyncStatus('synced','Synced');
+  } catch(e){
+    setSyncStatus('error','Sync failed — using local');
+    // fallback to localStorage
+    const local = localStorage.getItem('pb_local_'+userPin);
+    if(local) state = JSON.parse(local);
+  }
+  WALLETS.forEach(w=>{ const el=document.getElementById('ob-'+w); if(el) el.value=state.ob[w]||''; });
+  if(state.obSet) collapseOB();
+  updateAll();
+}
+
+async function persist(){
+  // Always save locally first as backup
+  localStorage.setItem('pb_local_'+userPin, JSON.stringify(state));
+  if(!binId) return;
+  setSyncStatus('syncing','Saving…');
+  try {
+    await fetch(`${JSONBIN_BASE}/b/${binId}`, {
+      method:'PUT',
+      headers:{
+        'Content-Type':'application/json',
+        'X-Master-Key': API_KEY
+      },
+      body: JSON.stringify(state)
+    });
+    setSyncStatus('synced','Saved ✓');
+  } catch(e){
+    setSyncStatus('error','Saved locally, cloud sync failed');
+  }
+}
+
+async function syncNow(){ await loadFromCloud(); }
+
+function walletBalance(w){
+  let bal=parseFloat(state.ob[w])||0;
+  state.txns.filter(t=>t.wallet===w).forEach(t=>{ bal+=t.type==='cr'?parseFloat(t.amt):-parseFloat(t.amt); });
+  return bal;
+}
+
+function updateAll(){
+  const cb=walletBalance('Cash'),sb=walletBalance('SBI'),ca=walletBalance('Canara');
+  const gp=sb+ca, tot=cb+gp;
+  document.getElementById('bal-Cash').textContent=fmt(cb);
+  document.getElementById('bal-SBI').textContent=fmt(sb);
+  document.getElementById('bal-Canara').textContent=fmt(ca);
+  document.getElementById('bal-GPay').textContent=fmt(gp);
+  document.getElementById('total-bal').textContent=fmt(tot);
+  document.getElementById('active-lbl').textContent=activeWallet==='GPay'?'GPay (all banks)':activeWallet;
+  document.getElementById('passbook-title').textContent=activeWallet+' Passbook';
+  document.querySelectorAll('.wcard').forEach(el=>el.classList.toggle('active',el.dataset.w===activeWallet||(activeWallet==='GPay'&&el.dataset.w==='GPay')));
+  document.querySelectorAll('.sub-card').forEach(el=>el.classList.toggle('active',el.dataset.w===activeWallet));
+  if(activeWallet==='SBI'||activeWallet==='Canara') document.querySelector('.wcard[data-w="GPay"]').classList.add('active');
+  if(state.obSet){
+    document.getElementById('obs-Cash').textContent=fmt(state.ob['Cash']);
+    document.getElementById('obs-SBI').textContent=fmt(state.ob['SBI']);
+    document.getElementById('obs-Canara').textContent=fmt(state.ob['Canara']);
+  }
+  renderPassbook();
+}
+
+function switchWallet(w){ activeWallet=w; document.getElementById('inp-wallet').value=(w==='GPay')?'SBI':w; updateAll(); }
+
+function collapseOB(){
+  document.getElementById('ob-form').style.display='none';
+  document.getElementById('ob-summary').style.display='block';
+  document.getElementById('ob-edit-btn').style.display='inline';
+}
+
+function toggleOB(){
+  const form=document.getElementById('ob-form'),sum=document.getElementById('ob-summary');
+  const hidden=form.style.display==='none';
+  form.style.display=hidden?'block':'none';
+  sum.style.display=hidden?'none':'block';
+  document.getElementById('ob-edit-btn').textContent=hidden?'Cancel':'Edit';
+}
+
+function saveOB(){
+  WALLETS.forEach(w=>{ state.ob[w]=parseFloat(document.getElementById('ob-'+w).value)||0; });
+  state.obSet=true; collapseOB(); persist(); updateAll();
+}
+
+function addTxn(){
+  const desc=document.getElementById('inp-desc').value.trim();
+  const amt=parseFloat(document.getElementById('inp-amt').value);
+  const date=document.getElementById('inp-date').value;
+  const type=document.getElementById('inp-type').value;
+  const wallet=document.getElementById('inp-wallet').value;
+  const cat=document.getElementById('inp-cat').value;
+  const note=document.getElementById('inp-note').value.trim();
+  if(!desc||!amt||amt<=0||!date) return;
+  state.txns.push({id:Date.now(),desc,amt,date,type,wallet,cat,note});
+  state.txns.sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
+  persist();
+  document.getElementById('inp-desc').value='';
+  document.getElementById('inp-amt').value='';
+  document.getElementById('inp-note').value='';
+  // Update wallet dropdown to match what was just added, but keep passbook view unchanged
+  document.getElementById('inp-wallet').value=wallet;
+  updateAll();
+}
+
+function openEditModal(id){
+  const t=state.txns.find(x=>x.id===id); if(!t) return;
+  editingId=id;
+  document.getElementById('edit-desc').value=t.desc;
+  document.getElementById('edit-amt').value=t.amt;
+  document.getElementById('edit-date').value=t.date;
+  document.getElementById('edit-type').value=t.type;
+  document.getElementById('edit-wallet').value=t.wallet;
+  document.getElementById('edit-cat').value=t.cat;
+  document.getElementById('edit-note').value=t.note||'';
+  document.getElementById('edit-modal').style.display='flex';
+}
+
+function closeModal(){ document.getElementById('edit-modal').style.display='none'; editingId=null; }
+
+function saveEdit(){
+  if(!editingId) return;
+  const idx=state.txns.findIndex(x=>x.id===editingId); if(idx===-1) return;
+  const amt=parseFloat(document.getElementById('edit-amt').value);
+  const desc=document.getElementById('edit-desc').value.trim();
+  const date=document.getElementById('edit-date').value;
+  if(!desc||!amt||amt<=0||!date) return;
+  state.txns[idx]={...state.txns[idx],desc,amt,date,
+    type:document.getElementById('edit-type').value,
+    wallet:document.getElementById('edit-wallet').value,
+    cat:document.getElementById('edit-cat').value,
+    note:document.getElementById('edit-note').value.trim()
+  };
+  state.txns.sort((a,b)=>a.date.localeCompare(b.date)||a.id-b.id);
+  closeModal(); persist(); updateAll();
+}
+
+function delTxn(id){ state.txns=state.txns.filter(t=>t.id!==id); persist(); updateAll(); }
+
+function renderPassbook(){
+  const fCat=document.getElementById('flt-cat').value;
+  const fType=document.getElementById('flt-type').value;
+  const pb=document.getElementById('passbook');
+  const isGPay=activeWallet==='GPay';
+  let walletTxns=isGPay
+    ?state.txns.filter(t=>t.wallet==='SBI'||t.wallet==='Canara')
+    :state.txns.filter(t=>t.wallet===activeWallet);
+  const overallRunBals={},specificRunBals={};
+  let tO=(parseFloat(state.ob['Cash'])||0)+(parseFloat(state.ob['SBI'])||0)+(parseFloat(state.ob['Canara'])||0);
+  state.txns.forEach(t=>{ tO+=t.type==='cr'?parseFloat(t.amt):-parseFloat(t.amt); overallRunBals[t.id]=tO; });
+  let tS=isGPay?(parseFloat(state.ob['SBI'])||0)+(parseFloat(state.ob['Canara'])||0):(parseFloat(state.ob[activeWallet])||0);
+  walletTxns.forEach(t=>{ tS+=t.type==='cr'?parseFloat(t.amt):-parseFloat(t.amt); specificRunBals[t.id]=tS; });
+  let filtered=walletTxns.slice();
+  if(fCat) filtered=filtered.filter(t=>t.cat===fCat);
+  if(fType) filtered=filtered.filter(t=>t.type===fType);
+  document.getElementById('txn-count').textContent=filtered.length+' entr'+(filtered.length===1?'y':'ies');
+  if(!filtered.length){ pb.innerHTML='<div class="empty"><i class="ti ti-receipt-off" style="font-size:28px;display:block;margin-bottom:8px"></i>No transactions yet</div>'; return; }
+  const byDate={};
+  filtered.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id).forEach(t=>{ if(!byDate[t.date]) byDate[t.date]=[]; byDate[t.date].push(t); });
+  const dates=Object.keys(byDate).sort((a,b)=>b.localeCompare(a));
+  pb.innerHTML=dates.map(d=>{
+    const label=new Date(d+'T00:00:00').toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric'});
+    const rows=byDate[d].map(t=>{
+      const wTag=isGPay?` · ${t.wallet}`:'';
+      return `<div class="pb-row">
+        <div class="pb-icon ${t.type}"><i class="ti ${catIcons[t.cat]||'ti-dots'}"></i></div>
+        <div class="pb-mid">
+          <div class="pb-desc">${t.desc}</div>
+          <div class="pb-meta">${t.cat}${wTag}${t.note?' · '+t.note:''}</div>
+        </div>
+        <div class="pb-right">
+          <div class="pb-amt ${t.type}">${t.type==='cr'?'+':'-'}${fmt(t.amt)}</div>
+          <div class="pb-bal-line">${isGPay?'GPay':'Acc'}: ${fmt(specificRunBals[t.id])}</div>
+          <div class="pb-bal-line">Total: ${fmt(overallRunBals[t.id])}</div>
+        </div>
+        <div class="pb-actions">
+          <i class="ti ti-edit pb-btn" onclick="openEditModal(${t.id})" title="Edit"></i>
+          <i class="ti ti-trash pb-btn del" onclick="delTxn(${t.id})" title="Delete"></i>
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="pb-date-sep">${label}</div>${rows}`;
+  }).join('');
+}
+</script>
+</body>
+</html>
